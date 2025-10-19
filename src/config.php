@@ -1,7 +1,14 @@
 <?php
 declare(strict_types=1);
 
-const REQUIRED_ENV_VARS = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER'];
+const DATABASE_DEFAULTS = [
+    'host' => 'localhost',
+    'port' => '3306',
+    'dbname' => 'u638520025_paginavendas',
+    'user' => 'u638520025_paginavendas',
+    'password' => 'OmVaZw~He8q/',
+    'charset' => 'utf8mb4',
+];
 
 function get_env(string $key, ?string $default = null): string
 {
@@ -19,18 +26,14 @@ function get_env(string $key, ?string $default = null): string
 
 function get_database_config(): array
 {
-    foreach (REQUIRED_ENV_VARS as $envVar) {
-        if (getenv($envVar) === false || getenv($envVar) === '') {
-            throw new RuntimeException('Database configuration incomplete. Please set DB_HOST, DB_PORT, DB_NAME, and DB_USER.');
-        }
-    }
-
     return [
-        'host' => get_env('DB_HOST'),
-        'port' => get_env('DB_PORT'),
-        'dbname' => get_env('DB_NAME'),
-        'user' => get_env('DB_USER'),
-        'password' => getenv('DB_PASSWORD') ?: '',
-        'charset' => 'utf8mb4',
+        'host' => get_env('DB_HOST', DATABASE_DEFAULTS['host']),
+        'port' => get_env('DB_PORT', DATABASE_DEFAULTS['port']),
+        'dbname' => get_env('DB_NAME', DATABASE_DEFAULTS['dbname']),
+        'user' => get_env('DB_USER', DATABASE_DEFAULTS['user']),
+        'password' => getenv('DB_PASSWORD') !== false && getenv('DB_PASSWORD') !== ''
+            ? getenv('DB_PASSWORD')
+            : DATABASE_DEFAULTS['password'],
+        'charset' => DATABASE_DEFAULTS['charset'],
     ];
 }

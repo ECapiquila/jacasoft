@@ -10,17 +10,25 @@ Landing page com captura de leads integrada a um backend PHP que grava os dados 
 
 ## Configuração do banco de dados
 
-1. Crie uma base de dados no MySQL.
-2. Importe o esquema disponível em `database/schema.sql`.
-3. Defina as variáveis de ambiente abaixo antes de iniciar a aplicação:
+A aplicação já está pronta para se conectar ao banco provisionado com as seguintes credenciais:
 
-   ```bash
-   export DB_HOST=localhost
-   export DB_PORT=3306
-   export DB_NAME=seu_banco
-   export DB_USER=seu_usuario
-   export DB_PASSWORD=sua_senha # opcional
-   ```
+- Servidor: `localhost`
+- Porta: `3306`
+- Base de dados: `u638520025_paginavendas`
+- Usuário: `u638520025_paginavendas`
+- Senha: `OmVaZw~He8q/`
+
+Basta garantir que o banco esteja acessível com essas informações e importar o esquema disponível em `database/schema.sql`.
+
+Se desejar utilizar outras credenciais, defina as variáveis de ambiente abaixo antes de iniciar a aplicação:
+
+```bash
+export DB_HOST=localhost
+export DB_PORT=3306
+export DB_NAME=seu_banco
+export DB_USER=seu_usuario
+export DB_PASSWORD=sua_senha # opcional
+```
 
 ## Executando localmente
 
