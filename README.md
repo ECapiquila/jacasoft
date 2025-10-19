@@ -1,6 +1,6 @@
 # jacasoft
 
-Landing page com captura de leads integrada a um backend PHP que grava os dados em um banco MySQL.
+Landing page com captura de leads integrada a um backend PHP que valida os dados e gera automaticamente a mensagem para o WhatsApp **244925521667**.
 
 ## Pré-requisitos
 
@@ -20,6 +20,8 @@ A aplicação já está pronta para se conectar ao banco provisionado com as seg
 
 Basta garantir que o banco esteja acessível com essas informações e importar o esquema disponível em `database/schema.sql`.
 
+> **Nota:** o fluxo atual apenas valida os dados e retorna o link do WhatsApp, sem gravar registros. As credenciais acima permanecem disponíveis caso seja necessário reativar a persistência no futuro.
+
 Se desejar utilizar outras credenciais, defina as variáveis de ambiente abaixo antes de iniciar a aplicação:
 
 ```bash
@@ -38,4 +40,4 @@ Com o PHP instalado, execute o servidor embutido apontando para o diretório do 
 php -S localhost:8000 index.php
 ```
 
-Em seguida acesse `http://localhost:8000` no navegador. O formulário modal enviará os dados para o endpoint `POST /api/leads`, que realiza validação no servidor e armazena as informações na tabela `leads`.
+Em seguida acesse `http://localhost:8000` no navegador. O formulário modal enviará os dados para o endpoint `POST /api/leads`, que valida as informações no servidor e retorna o link do WhatsApp 244925521667 com a mensagem pronta para envio.

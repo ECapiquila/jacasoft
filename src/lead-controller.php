@@ -32,38 +32,19 @@ class LeadController
         }
 
         $data = $validation['data'];
-        $timestamp = $payload['timestamp'] ?? (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM);
 
-        try {
-            $submittedAt = new DateTimeImmutable($timestamp);
-        } catch (Exception $exception) {
-            $submittedAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        }
+        $message = sprintf(
+            'Olá, meu nome é %s. Acabei de ver a apresentação e quero saber mais. Meu contato: %s.',
+            $data['name'],
+            $data['phone']
+        );
 
-        try {
-            $pdo = Database::connection();
-            $statement = $pdo->prepare('INSERT INTO leads (name, phone, source, submitted_at) VALUES (:name, :phone, :source, :submitted_at)');
-            $statement->execute([
-                ':name' => $data['name'],
-                ':phone' => $data['phone'],
-                ':source' => $data['source'],
-                ':submitted_at' => $submittedAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
-            ]);
-            $leadId = (int) $pdo->lastInsertId();
-        } catch (Throwable $exception) {
-            error_log('Lead storage failed: ' . $exception->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Não foi possível salvar seus dados no momento.',
-            ]);
-            return;
-        }
+        $whatsappUrl = 'https://wa.me/244925521667?text=' . rawurlencode($message);
 
-        http_response_code(201);
+        http_response_code(200);
         echo json_encode([
             'success' => true,
-            'id' => $leadId,
+            'whatsappUrl' => $whatsappUrl,
         ]);
     }
 }

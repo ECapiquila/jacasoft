@@ -512,19 +512,15 @@
 
             const result = await response.json().catch(() => null);
 
-            if (!response.ok || !result || !(result.success || result.id)) {
+            if (!response.ok || !result || !result.success || !result.whatsappUrl) {
               const errorMessage = (result && result.message) || 'Não foi possível enviar seus dados. Tente novamente em instantes.';
               throw new Error(errorMessage);
             }
 
             showFeedback('Dados enviados com sucesso! Redirecionando...', 'success');
 
-            const encodedMessage = encodeURIComponent(`Olá, meu nome é ${name}. Acabei de ver a apresentação e quero saber mais.`);
-            const whatsappNumber = phone.startsWith('244') ? phone : `244${phone}`;
-            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-
             setTimeout(() => {
-              window.open(whatsappUrl, '_blank');
+              window.open(result.whatsappUrl, '_blank');
               closeModal();
             }, 900);
           } catch (error) {
