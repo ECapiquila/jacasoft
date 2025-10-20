@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+datasource shadow {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENTE
+  CORRETOR
+  ADMIN
+}
+
+enum KycStatus {
+  PENDENTE
+  VERIFICADO
+  REPROVADO
+}
+
+enum PropertyPurpose {
+  VENDA
+  ARRENDAMENTO
+}
+
+enum PropertyStatus {
+  RASCUNHO
+  SUBMETIDO
+  APROVADO
+  REPROVADO
+  PAUSADO
+}
+
+enum OrderStatus {
+  AGUARDANDO_COMPROVATIVO
+  EM_VERIFICACAO
+  APROVADO
+  REPROVADO
+  CONCLUIDO
+}
+
+enum LedgerType {
+  COMISSAO
+  CREDITO_CORRETOR
+  DEBITO_SAQUE
+  AJUSTE
+}
+
+enum WithdrawalStatus {
+  SOLICITADO
+  EM_ANALISE
+  PAGO
+  REPROVADO
+}
+
+enum VisitStatus {
+  PENDENTE
+  CONFIRMADA
+  CONCLUIDA
+  CANCELADA
+}
+
+enum Currency {
+  KZ
+  USD
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  phone        String
+  role         Role
+  passwordHash String
+  avatarUrl    String?
+  verified     Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  corretor     Corretor?
+  messagesFrom Message[]  @relation("MessagesFrom")
+  messagesTo   Message[]  @relation("MessagesTo")
+  orders       Order[]    @relation("OrdersCliente")
+  visits       Visit[]    @relation("VisitsCliente")
+  favorites    Favorite[]
+  alerts       SavedSearch[]
+}
+
+model Corretor {
+  id            String          @id @default(cuid())
+  userId        String          @unique
+  company       String?
+  nif           String?
+  kycStatus     KycStatus       @default(PENDENTE)
+  bankData      Json
+  bio           String?
+  walletBalance Decimal         @default(0)
+  user          User            @relation(fields: [userId], references: [id])
+  properties    Property[]
+  withdrawals   Withdrawal[]
+  ledgerEntries LedgerEntry[]
+  visits        Visit[]
+}
+
+model Property {
+  id          String           @id @default(cuid())
+  corretorId  String
+  title       String
+  purpose     PropertyPurpose
+  type        String
+  price       Decimal
+  currency    Currency
+  location    Json
+  areaTotal   Int
+  bedrooms    Int
+  bathrooms   Int
+  parking     Int
+  amenities   String[]
+  description String
+  media       String[]
+  status      PropertyStatus    @default(RASCUNHO)
+  adminNotes  String?
+  featured    Boolean           @default(false)
+  publishedAt DateTime?
+  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime          @default(now())
+  corretor    Corretor          @relation(fields: [corretorId], references: [id])
+  orders      Order[]
+  messages    Message[]
+  visits      Visit[]
+  favorites   Favorite[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  propertyId  String
+  clientId    String
+  corretorId  String
+  value       Decimal
+  currency    Currency
+  reference   String      @unique
+  status      OrderStatus @default(AGUARDANDO_COMPROVATIVO)
+  adminNotes  String?
+  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime    @default(now())
+  property    Property    @relation(fields: [propertyId], references: [id])
+  client      User        @relation("OrdersCliente", fields: [clientId], references: [id])
+  corretor    Corretor    @relation(fields: [corretorId], references: [id])
+  proofs      Proof[]
+  ledger      LedgerEntry[]
+}
+
+model Proof {
+  id           String   @id @default(cuid())
+  orderId      String
+  fileUrl      String
+  valueInformed Decimal?
+  bankOrigin   String?
+  payerName    String?
+  createdAt    DateTime @default(now())
+  order        Order    @relation(fields: [orderId], references: [id])
+}
+
+model CommissionRule {
+  id                  String   @id @default(cuid())
+  percentDefault      Decimal  @default(0.1)
+  overridesByCorretor Json?
+}
+
+model LedgerEntry {
+  id         String      @id @default(cuid())
+  type       LedgerType
+  orderId    String?
+  corretorId String?
+  amount     Decimal
+  currency   Currency
+  createdAt  DateTime    @default(now())
+  notes      String?
+  order      Order?      @relation(fields: [orderId], references: [id])
+  corretor   Corretor?   @relation(fields: [corretorId], references: [id])
+}
+
+model Withdrawal {
+  id                String            @id @default(cuid())
+  corretorId        String
+  amount            Decimal
+  bankDataSnapshot  Json
+  status            WithdrawalStatus  @default(SOLICITADO)
+  adminReceiptUrl   String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  corretor          Corretor          @relation(fields: [corretorId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  propertyId String?
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  fromUser   User     @relation("MessagesFrom", fields: [fromUserId], references: [id])
+  toUser     User     @relation("MessagesTo", fields: [toUserId], references: [id])
+  property   Property? @relation(fields: [propertyId], references: [id])
+}
+
+model Visit {
+  id         String      @id @default(cuid())
+  propertyId String
+  clientId   String
+  corretorId String
+  datetime   DateTime
+  status     VisitStatus @default(PENDENTE)
+  property   Property    @relation(fields: [propertyId], references: [id])
+  client     User        @relation("VisitsCliente", fields: [clientId], references: [id])
+  corretor   Corretor    @relation(fields: [corretorId], references: [id])
+}
+
+model SavedSearch {
+  id          String  @id @default(cuid())
+  clientId    String
+  filters     Json
+  notifyEmail Boolean @default(true)
+  client      User    @relation(fields: [clientId], references: [id])
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  clientId   String
+  propertyId String
+  createdAt  DateTime @default(now())
+  client     User     @relation(fields: [clientId], references: [id])
+  property   Property @relation(fields: [propertyId], references: [id])
+}
+
+model SiteConfig {
+  id               String  @id @default(cuid())
+  branding         Json
+  bankAccounts     Json
+  currencyPrimary  Currency
+  currencySecondary Currency?
+  exchangeRate     Decimal @default(1)
+  minWithdrawal    Decimal @default(0)
+  termsUrl         String?
+  privacyUrl       String?
+}
